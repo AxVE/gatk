@@ -105,6 +105,6 @@ public final class AlleleFractionKernelSegmenter {
             }
         }
         logger.info(String.format("Found %d segments in %d chromosomes.", segments.size(), allelicCountsPerChromosome.keySet().size()));
-        return new AlleleFractionSegmentCollection(allelicCounts.getSampleMetadata(), segments);
+        return new AlleleFractionSegmentCollection(allelicCounts.getMetadata(), segments);
     }
 }
