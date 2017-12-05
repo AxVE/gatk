@@ -32,13 +32,16 @@ public class DistinctMismatchTagTransformer implements ReadTransformer {
         final byte[] refBases = referenceDataSource.queryAndPrefetch(read).getBases();
 
         final int numDistinctMismatches = countDistinctMismatches(read.convertToSAMRecord(header), refBases, read.getAssignedStart() - 1);
-
+        // since DM == 0 implies NM == 0, and since the latter may be more generally useful, we record it if possible
+        if (numDistinctMismatches == 0) {
+            read.setAttribute(SAMTag.NM.name(), 0);
+        }
         read.setAttribute(SAM_TAG, numDistinctMismatches);
         return read;
     }
 
 
-    // Note: this is almost copied directly from {@link SequenceUtil}.  The differene is that we ignore consecutive mismatches,
+    // Note: this is almost copied directly from {@link SequenceUtil}.  The difference is that we ignore consecutive mismatches,
     // so that MNPs are counted as a single mismatch.  Also, we count indels and soft clips as here.
     private static int countDistinctMismatches(final SAMRecord read, final byte[] referenceBases, final int referenceOffset) {
         int mismatches = 0;

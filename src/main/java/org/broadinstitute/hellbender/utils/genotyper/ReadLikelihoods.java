@@ -802,13 +802,14 @@ public final class ReadLikelihoods<A extends Allele> implements SampleList, Alle
      * Add more reads to the collection.
      *
      * @param readsBySample reads to add.
-     * @param initialLikelihood the likelihood for the new entries.
+     * @param initialRefLikelihood the likelihood for the new ref allele entries.
+     * @param initialAltLikelihood the likelihood for the new alt allele entries.
      *
      * @throws IllegalArgumentException if {@code readsBySample} is {@code null} or {@code readsBySample} contains
      *  {@code null} reads, or {@code readsBySample} contains read that are already present in the read-likelihood
      *  collection.
      */
-    public void addReads(final Map<String,List<GATKRead>> readsBySample, final double initialLikelihood) {
+    public void addReads(final Map<String,List<GATKRead>> readsBySample, final double initialRefLikelihood, final double initialAltLikelihood) {
         for (final Map.Entry<String,List<GATKRead>> entry : readsBySample.entrySet()) {
             final String sample = entry.getKey();
             final List<GATKRead> newSampleReads = entry.getValue();
@@ -827,21 +828,33 @@ public final class ReadLikelihoods<A extends Allele> implements SampleList, Alle
             final int newSampleReadCount = sampleReadCount + newSampleReads.size();
 
             appendReads(newSampleReads, sampleIndex, sampleReadCount, newSampleReadCount);
-            extendsLikelihoodArrays(initialLikelihood, sampleIndex, sampleReadCount, newSampleReadCount);
+            extendsLikelihoodArrays(initialRefLikelihood, initialAltLikelihood, sampleIndex, sampleReadCount, newSampleReadCount);
         }
     }
 
+    public void addReads(final Map<String,List<GATKRead>> readsBySample, final double initialLikelihood) {
+        addReads(readsBySample, initialLikelihood, initialLikelihood);
+    }
+
     // Extends the likelihood arrays-matrices.
-    private void extendsLikelihoodArrays(final double initialLikelihood, final int sampleIndex, final int sampleReadCount, final int newSampleReadCount) {
+    private void extendsLikelihoodArrays(final double initialRefLikelihood, final double initialAltLikelihood, final int sampleIndex, final int sampleReadCount, final int newSampleReadCount) {
         final double[][] sampleValues = valuesBySampleIndex[sampleIndex];
         final int alleleCount = alleles.numberOfAlleles();
         for (int a = 0; a < alleleCount; a++) {
             sampleValues[a] = Arrays.copyOf(sampleValues[a], newSampleReadCount);
         }
-        if (initialLikelihood != 0.0) // the default array new value.
+
+
+        if (referenceAlleleIndex >= 0 && initialRefLikelihood != 0.0) { // the default array new value.
+            Arrays.fill(sampleValues[referenceAlleleIndex], sampleReadCount, newSampleReadCount, initialRefLikelihood);
+        }
+
+        if (initialAltLikelihood != 0.0) // the default array new value.
         {
             for (int a = 0; a < alleleCount; a++) {
-                Arrays.fill(sampleValues[a], sampleReadCount, newSampleReadCount, initialLikelihood);
+                if (a != referenceAlleleIndex) {
+                    Arrays.fill(sampleValues[a], sampleReadCount, newSampleReadCount, initialAltLikelihood);
+                }
             }
         }
     }

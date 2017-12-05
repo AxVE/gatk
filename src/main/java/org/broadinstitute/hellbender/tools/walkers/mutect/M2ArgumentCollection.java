@@ -92,6 +92,18 @@ public class M2ArgumentCollection extends AssemblyBasedCallerArgumentCollection 
     public double maxPopulationAlleleFrequency = 0.01;
 
     /**
+     * Maximum non-contiguous mismatches allowed per read to avoid flagging as mapping error.
+     */
+    @Argument(fullName = "max-distinct-mismatches", optional = true, doc = "Maximum non-contiguous mismatches allowed per read to avoid flagging as mapping error.")
+    public int maxDistinctMismatchesInRead = 3;
+
+    /**
+     * Reject an entire pileup if too many reads with signs of mapping error show up in the pileup
+     */
+    @Argument(fullName = "max-bad-reads-in-pileup", optional = true, doc = "Reject an entire pileup if too many reads with signs of mapping error show up in the pileup.")
+    public int maxBadReadsInPileup = 10;
+
+    /**
      * This is a measure of the minimum evidence to support that a variant observed in the tumor is not also present in the normal.
      * Applies to normal data in a tumor with matched normal analysis. The default has been tuned for diploid somatic analyses.
      * It is unlikely such analyses will require changing the default value. Increasing the parameter may increase the sensitivity of somatic calling,
