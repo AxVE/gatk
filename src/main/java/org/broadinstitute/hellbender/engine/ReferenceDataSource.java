@@ -2,6 +2,7 @@ package org.broadinstitute.hellbender.engine;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.Locatable;
 import org.broadinstitute.hellbender.utils.SimpleInterval;
 import org.broadinstitute.hellbender.utils.iterators.ByteArrayIterator;
 import org.broadinstitute.hellbender.utils.reference.ReferenceBases;
@@ -45,7 +46,7 @@ public interface ReferenceDataSource extends GATKDataSource<Byte>, AutoCloseable
      * @param interval query interval
      * @return a ReferenceSequence containing all bases spanning the query interval, prefetched
      */
-    default public ReferenceSequence queryAndPrefetch( final SimpleInterval interval ) {
+    default public ReferenceSequence queryAndPrefetch( final Locatable interval ) {
         return queryAndPrefetch(interval.getContig(), interval.getStart(), interval.getEnd());
     }
 

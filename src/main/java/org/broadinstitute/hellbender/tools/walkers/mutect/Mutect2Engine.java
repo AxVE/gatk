@@ -18,6 +18,8 @@ import org.broadinstitute.hellbender.tools.walkers.annotator.VariantAnnotatorEng
 import org.broadinstitute.hellbender.tools.walkers.genotyper.GenotypingOutputMode;
 import org.broadinstitute.hellbender.tools.walkers.haplotypecaller.*;
 import org.broadinstitute.hellbender.tools.walkers.haplotypecaller.readthreading.ReadThreadingAssembler;
+import org.broadinstitute.hellbender.transformers.DistinctMismatchTagTransformer;
+import org.broadinstitute.hellbender.transformers.ReadTransformer;
 import org.broadinstitute.hellbender.utils.*;
 import org.broadinstitute.hellbender.utils.activityprofile.ActivityProfileState;
 import org.broadinstitute.hellbender.utils.downsampling.AlleleBiasedDownsamplingUtils;
@@ -35,6 +37,7 @@ import org.broadinstitute.hellbender.utils.smithwaterman.SmithWatermanAligner;
 import org.broadinstitute.hellbender.utils.variant.GATKVCFConstants;
 import org.broadinstitute.hellbender.utils.variant.GATKVCFHeaderLines;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -82,6 +85,8 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
         }
     };
 
+    private ReadTransformer readTransformer;
+
     /**
      * Create and initialize a new HaplotypeCallerEngine given a collection of HaplotypeCaller arguments, a reads header,
      * and a reference file
@@ -97,7 +102,11 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
         this.header = Utils.nonNull(header);
         Utils.nonNull(reference);
         referenceReader = AssemblyBasedCallerUtils.createReferenceReader(reference);
+
+        // This must be a separate copy because the two reference readers need independent caches
+        final CachingIndexedFastaSequenceFile referenceReaderForReadTransformer = AssemblyBasedCallerUtils.createReferenceReader(reference);
         aligner = SmithWatermanAligner.getAligner(MTAC.smithWatermanImplementation);
+        readTransformer = new DistinctMismatchTagTransformer(new File(reference), header);
         initialize(createBamOutIndex, createBamOutMD5);
     }
 
@@ -151,6 +160,8 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
 
         return filters;
     }
+
+    public ReadTransformer getReadTransformer() { return readTransformer; }
 
     public void writeHeader(final VariantContextWriter vcfWriter, final SAMSequenceDictionary sequenceDictionary,
                             final Set<VCFHeaderLine>  defaultToolHeaderLines) {
