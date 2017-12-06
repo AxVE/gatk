@@ -28,7 +28,7 @@ RUN cp -r gatk.jar /gatk
 RUN cp -r install_R_packages.R /gatk
 
 RUN rm -r /gatk/src /
-    rm -r .gradle /
-    rm -r /root/.gradle
+RUN rm -r .gradle /
+RUN rm -r /root/.gradle
 
 WORKDIR /gatk
