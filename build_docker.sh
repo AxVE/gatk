@@ -105,9 +105,8 @@ if [ -n "${IS_PUSH}" ]; then
 else
     RELEASE=false
 fi
-gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
-gradlew bundle
-ZIPPATH= $(find ./build -name "gatk*.zip")
+./gradlew clean bundle -Drelease=$DRELEASE
+ZIPPATH=$( find ./build -name "gatk*.zip" )
 echo ${ZIPPATH}
 
 echo "Building image to tag ${REPO_PRJ}:${GITHUB_TAG}..."
