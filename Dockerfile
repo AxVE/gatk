@@ -20,7 +20,7 @@ WORKDIR /root
 #Setup test data
 WORKDIR /gatk
 # Create link to where test data is expected
-RUN ln -s /testdata src/test/resources
+# RUN ln -s /testdata src/test/resources
 
 # Create a simple unit test runner
 ENV CI true
