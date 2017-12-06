@@ -27,4 +27,8 @@ RUN cp -r /root/run_unit_tests.sh /gatk
 RUN cp -r gatk.jar /gatk
 RUN cp -r install_R_packages.R /gatk
 
+RUN rm -r /gatk/src /
+    rm -r .gradle /
+    rm -r /root/.gradle
+
 WORKDIR /gatk

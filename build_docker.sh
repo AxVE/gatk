@@ -42,12 +42,6 @@ Optional arguments:  \n \
 	exit 1
 fi
 
-# Make sure sudo or root was used.
-if [ "$(whoami)" != "root" ]; then
-	echo "You must have superuser privileges (through sudo or root user) to run this script"
-	exit 1
-fi
-
 # -z is like "not -n"
 if [ -z ${IS_NOT_LATEST} ] && [ -n "${IS_HASH}" ] && [ -n "${IS_PUSH}" ]; then
 	echo -e "\n##################"
@@ -112,7 +106,7 @@ else
     RELEASE=false
 fi
 echo "Building image to tag ${REPO_PRJ}:${GITHUB_TAG}..."
-docker build -t ${REPO_PRJ}:${GITHUB_TAG} --build-arg DRELEASE=$RELEASE .
+docker build -t ${REPO_PRJ}:${GITHUB_TAG} --squash --build-arg DRELEASE=$RELEASE .
 
 if [ -z "${IS_NOT_RUN_UNIT_TESTS}" ] ; then
 
