@@ -14,8 +14,8 @@ RUN ln -s /gatk/$( find . -name "gatk*spark.jar" ) gatk-spark.jar
 WORKDIR /root
 
 # Make sure we can see a help message
-RUN ln -sFv /gatk/gatk.jar
-RUN java -jar gatk.jar -h
+# RUN ln -sFv /gatk/gatk.jar
+# RUN java -jar gatk.jar -h
 
 #Setup test data
 WORKDIR /gatk
