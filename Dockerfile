@@ -1,11 +1,13 @@
 # Using OpenJDK 8
 FROM broadinstitute/gatk:gatkbase-1.2.1
-ARG DRELEASE
+ARG ZIPPATH
 
-ADD . /gatk
+ADD ZIPPATH /gatk.zip
+
+RUN unzip /gatk.zip
 
 WORKDIR /gatk
-RUN /gatk/gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
+# RUN /gatk/gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
 
 WORKDIR /root
 
@@ -27,11 +29,10 @@ RUN cp -r /root/run_unit_tests.sh /gatk
 RUN cp -r gatk.jar /gatk
 RUN cp -r install_R_packages.R /gatk
 
-RUN rm -r /gatk/src
-RUN rm -rf .gradle
-RUN rm -rf /gatk/.git
-RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
-RUN rm -rf /var/lib/apt/lists/*
-# RUN rm -r --no-preserve-root /root/.gradle
+# RUN rm -r /gatk/src
+# RUN rm -rf .gradle
+# RUN rm -rf /gatk/.git
+# RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+# RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /gatk

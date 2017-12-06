@@ -105,8 +105,13 @@ if [ -n "${IS_PUSH}" ]; then
 else
     RELEASE=false
 fi
+gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
+gradlew bundle
+ZIPPATH= $(find ./build -name "gatk*.zip")
+echo ${ZIPPATH}
+
 echo "Building image to tag ${REPO_PRJ}:${GITHUB_TAG}..."
-docker build -t ${REPO_PRJ}:${GITHUB_TAG} --squash --build-arg DRELEASE=$RELEASE .
+docker build -t ${REPO_PRJ}:${GITHUB_TAG} --squash --build-arg ZIPPATH=$ZIPPATH .
 
 if [ -z "${IS_NOT_RUN_UNIT_TESTS}" ] ; then
 
