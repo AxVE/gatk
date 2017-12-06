@@ -5,14 +5,17 @@ ARG ZIPPATH
 ADD $ZIPPATH /gatk.zip
 
 RUN unzip /gatk.zip
+ar
 
 WORKDIR /gatk
+RUN ln -s /gatk/$( find . -name "gatk*local.jar" ) gatk.jar
+RUN ln -s /gatk/$( find . -name "gatk*spark.jar" ) gatk-spark.jar
 # RUN /gatk/gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
 
 WORKDIR /root
 
 # Make sure we can see a help message
-RUN ln -sFv /gatk/build/libs/gatk.jar
+RUN ln -sFv /gatk/gatk.jar
 RUN java -jar gatk.jar -h
 
 #Setup test data
