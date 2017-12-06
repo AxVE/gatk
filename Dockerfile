@@ -5,7 +5,6 @@ ARG ZIPPATH
 ADD $ZIPPATH /gatk.zip
 
 RUN unzip /gatk.zip
-ar
 
 WORKDIR /gatk
 RUN ln -s /gatk/$( find . -name "gatk*local.jar" ) gatk.jar
