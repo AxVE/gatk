@@ -2,7 +2,7 @@
 FROM broadinstitute/gatk:gatkbase-1.2.1
 ARG ZIPPATH
 
-ADD $ZIPPATH /gatk.zip && unzip /gatk.zip -d -j /gatk && rm /gatk.zip
+ADD $ZIPPATH /gatk.zip && unzip -j /gatk.zip -d /gatk && rm /gatk.zip
 
 # RUN unzip /gatk.zip -d -j /gatk
 
