@@ -168,12 +168,12 @@ public final class LocalReadShard implements Shard<GATKRead> {
             readsIterator = new ReadFilteringIterator(readsIterator, readFilter);
         }
 
-        if ( downsampler != null ) {
-            readsIterator = new ReadsDownsamplingIterator(readsIterator, downsampler);
-        }
-
         if (postReadFilterTransformer != null) {
             readsIterator = new ReadTransformingIterator(readsIterator, postReadFilterTransformer);
+        }
+
+        if ( downsampler != null ) {
+            readsIterator = new ReadsDownsamplingIterator(readsIterator, downsampler);
         }
 
         return readsIterator;
