@@ -4,23 +4,20 @@ ARG ZIPPATH
 
 ADD $ZIPPATH /gatk
 
-# RUN unzip /gatk.zip -d -j /gatk
-
 WORKDIR /gatk
 RUN ln -s /gatk/$( find . -name "gatk*local.jar" ) gatk.jar
 RUN ln -s /gatk/$( find . -name "gatk*spark.jar" ) gatk-spark.jar
-# RUN /gatk/gradlew clean compileTestJava installAll localJar -Drelease=$DRELEASE
 
 WORKDIR /root
 
 # Make sure we can see a help message
-# RUN ln -sFv /gatk/gatk.jar
-# RUN java -jar gatk.jar -h
+RUN ln -sFv /gatk/gatk.jar
+RUN java -jar gatk.jar -h
 
 #Setup test data
 WORKDIR /gatk
 # Create link to where test data is expected
- RUN ln -s /testdata src/test/resources
+# RUN ln -s /testdata src/test/resources
 
 # Create a simple unit test runner
 ENV CI true
