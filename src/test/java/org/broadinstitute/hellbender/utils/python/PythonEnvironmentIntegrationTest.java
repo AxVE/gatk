@@ -16,11 +16,15 @@ public class PythonEnvironmentIntegrationTest {
     @DataProvider(name="supportedPythonPackages")
     public Object[][] getSupportedPythonPackages() {
         return new Object[][] {
-                // names of packages that we should be able to import from within the GATK conda environment
+                // names of base packages that we should be able to import from within the GATK conda environment
+                // this list isn't exhaustive
                 { "numpy"},
                 { "scipy"},
                 { "tensorflow"},
-                { "theano" }
+                { "theano" },
+                { "keras" },
+                { "pymc3" },
+                { "argparse" },
         };
     }
 
