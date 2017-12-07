@@ -2,9 +2,9 @@
 FROM broadinstitute/gatk:gatkbase-1.2.1
 ARG ZIPPATH
 
-ADD $ZIPPATH /gatk.zip
+ADD $ZIPPATH /gatk.zip && unzip /gatk.zip -d -j /gatk && rm /gatk.zip
 
-RUN unzip /gatk.zip -d -j /gatk
+# RUN unzip /gatk.zip -d -j /gatk
 
 WORKDIR /gatk
 RUN ln -s /gatk/$( find . -name "gatk*local.jar" ) gatk.jar
@@ -28,8 +28,8 @@ RUN echo "cd /gatk/ && ./gradlew jacocoTestReport" >/root/run_unit_tests.sh
 
 WORKDIR /root
 RUN cp -r /root/run_unit_tests.sh /gatk
- RUN cp -r gatk.jar /gatk
- RUN cp -r install_R_packages.R /gatk
+RUN cp -r gatk.jar /gatk
+RUN cp -r install_R_packages.R /gatk
 
 # RUN rm -r /gatk/src
 # RUN rm -rf .gradle
