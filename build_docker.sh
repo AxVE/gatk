@@ -107,10 +107,11 @@ else
 fi
 ./gradlew clean bundle -Drelease=$DRELEASE
 ZIPPATH=$( find ./build -name "gatk*.zip" )
+unzip -j ZIPPATH -d ./unzippedJar
 echo ${ZIPPATH}
 
 echo "Building image to tag ${REPO_PRJ}:${GITHUB_TAG}..."
-docker build -t ${REPO_PRJ}:${GITHUB_TAG} --squash --build-arg ZIPPATH=$ZIPPATH .
+docker build -t ${REPO_PRJ}:${GITHUB_TAG} --squash --build-arg ZIPPATH=./unzippedJar .
 
 if [ -z "${IS_NOT_RUN_UNIT_TESTS}" ] ; then
 
