@@ -277,7 +277,7 @@ task PlotSegmentedCopyRatio {
             --segments ${called_segments} \
             -SD ${ref_fasta_dict} \
             --output ${output_dir_} \
-            --outputPrefix ${entity_id}
+            --output-prefix ${entity_id}
     >>>
 
     runtime {

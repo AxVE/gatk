@@ -185,7 +185,7 @@ task AllelicCNV {
                     --tumorHets ${hets} \
                     --tangentNormalized ${tn_coverage} \
                     --segments ${called_segments} \
-                    --outputPrefix ${entity_id} \
+                    --output-prefix ${entity_id} \
                     --useAllCopyRatioSegments ${default=false use_all_copy_ratio_segments} \
                     --maxNumIterationsSNPSeg ${default=5 max_num_iterations_snp_seg} \
                     --smallSegmentThreshold ${default=3 small_segment_threshold} \
@@ -202,7 +202,7 @@ task AllelicCNV {
                     --tumorHets ${hets} \
                     --tangentNormalized ${tn_coverage} \
                     --segments ${called_segments} \
-                    --outputPrefix ${entity_id} \
+                    --output-prefix ${entity_id} \
                     --useAllCopyRatioSegments ${default=false use_all_copy_ratio_segments} \
                     --maxNumIterationsSNPSeg ${default=25 max_num_iterations_snp_seg} \
                     --smallSegmentThreshold ${default=3 small_segment_threshold} \
@@ -256,7 +256,7 @@ task PlotACNVResults {
             --segments ${acnv_segments} \
             -SD ${ref_fasta_dict} \
             --output ${output_dir_} \
-            --outputPrefix ${entity_id}
+            --output-prefix ${entity_id}
     >>>
 
     runtime {
