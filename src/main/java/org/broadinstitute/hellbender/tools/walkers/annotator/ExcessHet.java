@@ -8,6 +8,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.StatUtils;
+import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import org.broadinstitute.hellbender.engine.ReferenceContext;
 import org.broadinstitute.hellbender.utils.GenotypeCounts;
@@ -15,13 +16,13 @@ import org.broadinstitute.hellbender.utils.GenotypeUtils;
 import org.broadinstitute.hellbender.utils.Utils;
 import org.broadinstitute.hellbender.utils.genotyper.ReadLikelihoods;
 import org.broadinstitute.hellbender.utils.help.HelpConstants;
+import org.broadinstitute.hellbender.utils.samples.PedigreeValidationType;
+import org.broadinstitute.hellbender.utils.samples.SampleDBBuilder;
 import org.broadinstitute.hellbender.utils.variant.GATKVCFConstants;
 import org.broadinstitute.hellbender.utils.variant.GATKVCFHeaderLines;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 
 /**
  * Phred-scaled p-value for exact test of excess heterozygosity.
@@ -35,11 +36,38 @@ public final class ExcessHet extends InfoFieldAnnotation implements StandardAnno
     
     public static final double PHRED_SCALED_MIN_P_VALUE = -10.0 * Math.log10(MIN_NEEDED_VALUE);
 
+    //@Argument(fullName = "founderID", shortName = "founderID", doc="Samples representing the population \"founders\"", optional=true)
+    private final Collection<String> founderIds;
+
+    //@Argument(fullName="pedigree", shortName="ped", doc="Pedigree file", optional=true)
+    private File pedigreeFile = null;
+    private boolean hasAddedPedigreeFounders = false;
+
+    public ExcessHet(final Set<String> founderIds){
+        //If available, get the founder IDs and cache them. the IC will only be computed on founders then.
+        this.founderIds = founderIds == null? new ArrayList<>() : new ArrayList<>(founderIds);
+    }
+
+    public ExcessHet(final File pedigreeFile){
+        //If available, get the founder IDs and cache them. the IC will only be computed on founders then.
+        this.pedigreeFile = pedigreeFile;
+        founderIds = initializeSampleDB(pedigreeFile);
+        hasAddedPedigreeFounders = true;
+    }
+
+    public ExcessHet() {
+        this((Set<String>) null);
+    }
+
     @Override
     public Map<String, Object> annotate(final ReferenceContext ref,
                                         final VariantContext vc,
                                         final ReadLikelihoods<Allele> likelihoods) {
-        final GenotypesContext genotypes = vc.getGenotypes();
+        if ((pedigreeFile!= null) && (!hasAddedPedigreeFounders)) {
+            founderIds.addAll(initializeSampleDB(pedigreeFile));
+            hasAddedPedigreeFounders = true;
+        }
+        final GenotypesContext genotypes = (founderIds == null || founderIds.isEmpty()) ? vc.getGenotypes() : vc.getGenotypes(new HashSet<>(founderIds));
         if (genotypes == null || !vc.isVariant()) {
             return Collections.emptyMap();
         }
@@ -176,4 +204,12 @@ public final class ExcessHet extends InfoFieldAnnotation implements StandardAnno
         return Collections.singletonList(GATKVCFConstants.EXCESS_HET_KEY);
     }
 
+    /**
+     * Entry-point function to initialize the samples database from input data
+     */
+    private Set<String> initializeSampleDB(File pedigreeFile) {
+        final SampleDBBuilder sampleDBBuilder = new SampleDBBuilder(PedigreeValidationType.STRICT);
+        sampleDBBuilder.addSamplesFromPedigreeFiles(Collections.singletonList(pedigreeFile));
+        return sampleDBBuilder.getFinalSampleDB().getFounderIds();
+    }
 }
