@@ -238,8 +238,7 @@ public final class AssemblyBasedCallerUtils {
                                                   final Logger logger,
                                                   final ReferenceSequenceFile referenceReader,
                                                   final ReadThreadingAssembler assemblyEngine,
-                                                  final SmithWatermanAligner aligner,
-                                                  final boolean skipPerfectRefMatchingReads){
+                                                  final SmithWatermanAligner aligner){
         finalizeRegion(region, argumentCollection.errorCorrectReads, argumentCollection.dontUseSoftClippedBases, (byte)(argumentCollection.minBaseQualityScore - 1), header, sampleList);
         if( argumentCollection.debug) {
             logger.info("Assembling " + region.getSpan() + " with " + region.size() + " reads:    (with overlap region = " + region.getExtendedSpan() + ")");
@@ -260,7 +259,7 @@ public final class AssemblyBasedCallerUtils {
         try {
             final AssemblyResultSet assemblyResultSet = assemblyEngine.runLocalAssembly(region, referenceHaplotype, fullReferenceWithPadding,
                                                                                         paddedReferenceLoc, givenAlleles, readErrorCorrector, header,
-                                                                                        aligner, skipPerfectRefMatchingReads);
+                                                                                        aligner);
             assemblyResultSet.debugDump(logger);
             return assemblyResultSet;
         } catch (final Exception e){

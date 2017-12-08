@@ -25,17 +25,19 @@ public class DistinctMismatchTagTransformer implements ReadTransformer {
 
     @Override
     public GATKRead apply(final GATKRead read) {
-        //TODO: if read already has NM attribute, we can calculate from that and the read's CIGAR
+        if (read.getCigarElements().size() == 1) {
+            final Integer editDistance = read.getAttributeAsInteger(SAMTag.NM.name());
+            if (editDistance == 0 || editDistance == 1) {
+                read.setAttribute(SAM_TAG, editDistance);
+                return read;
+            }
+        }
 
         // Note: querying the ReferenceDataSource copies the reference bases.  This seems wasteful but really the cost is
         // negligible -- about one minute total for a billion length-100 reads.
         final byte[] refBases = referenceDataSource.queryAndPrefetch(read).getBases();
 
         final int numDistinctMismatches = countDistinctMismatches(read.convertToSAMRecord(header), refBases, read.getAssignedStart() - 1);
-        // since DM == 0 implies NM == 0, and since the latter may be more generally useful, we record it if possible
-        if (numDistinctMismatches == 0) {
-            read.setAttribute(SAMTag.NM.name(), 0);
-        }
         read.setAttribute(SAM_TAG, numDistinctMismatches);
         return read;
     }

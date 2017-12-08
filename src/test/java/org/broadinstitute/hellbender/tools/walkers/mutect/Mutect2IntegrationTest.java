@@ -344,33 +344,4 @@ public class Mutect2IntegrationTest extends CommandLineProgramTest {
     private static String keyForVariant( final VariantContext variant ) {
         return String.format("%s:%d-%d %s", variant.getContig(), variant.getStart(), variant.getEnd(), variant.getAlleles());
     }
-
-    @Test
-    public void testDebug() throws Exception {
-        Utils.resetRandomGenerator();
-        final File unfilteredVcf = createTempFile("unfiltered", ".vcf");
-        final File filteredVcf = createTempFile("filtered", ".vcf");
-
-        final String[] args = {
-                "-I", "/Volumes/cga_tcga-gsc/benchmark/data/realignments/synthetic.challenge.set4.tumor/synthetic.challenge.set4.tumor.bam",
-                "-tumor", "synthetic.challenge.set4.tumour",
-                "-R", b37_reference_20_21,
-                "-L", "20:7,516,143-7,516,561",
-                "-germline-resource", GNOMAD.getAbsolutePath(),
-                "-O", unfilteredVcf.getAbsolutePath()
-        };
-
-        runCommandLine(args);
-
-        // run FilterMutectCalls
-        new Main().instanceMain(makeCommandLineArgs(Arrays.asList("-V", unfilteredVcf.getAbsolutePath(), "-O", filteredVcf.getAbsolutePath()), "FilterMutectCalls"));
-
-
-        final long numVariantsBeforeFiltering = StreamSupport.stream(new FeatureDataSource<VariantContext>(filteredVcf).spliterator(), false).count();
-
-        final long numVariantsPassingFilters = StreamSupport.stream(new FeatureDataSource<VariantContext>(filteredVcf).spliterator(), false)
-                .filter(vc -> vc.getFilters().isEmpty()).count();
-
-        int j = 2;
-    }
 }

@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMTag;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class ReadThreadingAssembler {
     private static final Logger logger = LogManager.getLogger(ReadThreadingAssembler.class);
@@ -91,13 +89,13 @@ public final class ReadThreadingAssembler {
 
     /**
      * Main entry point into the assembly engine. Build a set of deBruijn graphs out of the provided reference sequence and list of reads
-     * @param aligner
      * @param assemblyRegion              AssemblyRegion object holding the reads which are to be used during assembly
      * @param refHaplotype              reference haplotype object
      * @param fullReferenceWithPadding  byte array holding the reference sequence with padding
      * @param refLoc                    GenomeLoc object corresponding to the reference sequence with padding
      * @param givenAlleles   the alleles to inject into the haplotypes during GGA mode
      * @param readErrorCorrector        a ReadErrorCorrector object, if read are to be corrected before assembly. Can be null if no error corrector is to be used.
+     * @param aligner
      * @return                          the resulting assembly-result-set
      */
     public AssemblyResultSet runLocalAssembly(final AssemblyRegion assemblyRegion,
@@ -107,8 +105,7 @@ public final class ReadThreadingAssembler {
                                               final List<VariantContext> givenAlleles,
                                               final ReadErrorCorrector readErrorCorrector,
                                               final SAMFileHeader header,
-                                              final SmithWatermanAligner aligner,
-                                              final boolean skipPerfectRefMatchingReads) {
+                                              final SmithWatermanAligner aligner) {
         Utils.nonNull(assemblyRegion, "Assembly engine cannot be used with a null AssemblyRegion.");
         Utils.nonNull(assemblyRegion.getExtendedSpan(), "Active region must have an extended location.");
         Utils.nonNull(refHaplotype, "Reference haplotype cannot be null.");
@@ -133,10 +130,6 @@ public final class ReadThreadingAssembler {
             correctedReads = assemblyRegion.getReads();
         }
 
-        final List<GATKRead> readsToAssemble = !skipPerfectRefMatchingReads ? correctedReads :
-                correctedReads.stream().filter(r -> r.getAttributeAsInteger(SAMTag.NM.name()) != 0).collect(Collectors.toList());
-
-
         final List<SeqGraph> nonRefGraphs = new LinkedList<>();
         final AssemblyResultSet resultSet = new AssemblyResultSet();
         resultSet.setRegionForGenotyping(assemblyRegion);
@@ -147,7 +140,7 @@ public final class ReadThreadingAssembler {
         resultSet.add(refHaplotype);
         final Map<SeqGraph,AssemblyResult> assemblyResultByGraph = new HashMap<>();
         // create the graphs by calling our subclass assemble method
-        for ( final AssemblyResult result : assemble(readsToAssemble, refHaplotype, givenHaplotypes, header, aligner) ) {
+        for ( final AssemblyResult result : assemble(correctedReads, refHaplotype, givenHaplotypes, header, aligner) ) {
             if ( result.getStatus() == AssemblyResult.Status.ASSEMBLED_SOME_VARIATION ) {
                 // do some QC on the graph
                 sanityCheckGraph(result.getGraph(), refHaplotype);

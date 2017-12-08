@@ -2,7 +2,6 @@ package org.broadinstitute.hellbender.tools.walkers.mutect;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMTag;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.vcf.*;
@@ -40,7 +39,6 @@ import org.broadinstitute.hellbender.utils.variant.GATKVCFHeaderLines;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by davidben on 9/15/16.
@@ -86,9 +84,6 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
             return read.getLength() >= MIN_READ_LENGTH;
         }
     };
-
-    //TODO: reove after debugging
-    private int blar = 0;
 
     private ReadTransformer readTransformer;
 
@@ -223,16 +218,23 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
             return NO_CALLS;
         }
 
-        /*final List<GATKRead> readsToKeep = originalAssemblyRegion.getReads().stream()
-                .filter(r -> r.getAttributeAsInteger(DistinctMismatchTagTransformer.SAM_TAG) <= MTAC.maxDistinctMismatchesInRead)
-                .collect(Collectors.toList());
+        // no point assembling reads that match the reference because the reference haplotype is always threaded into the assembly graph
+        final List<GATKRead> possibleVariantReads = new ArrayList<>();
+        final List<GATKRead> perfectRefMatchReads = new ArrayList<>();
+        originalAssemblyRegion.getReads().forEach( r -> {
+            final Integer distinctMismatches = r.getAttributeAsInteger(DistinctMismatchTagTransformer.SAM_TAG);
+            (distinctMismatches == 0 ? perfectRefMatchReads : possibleVariantReads).add(r);
+        });
 
         originalAssemblyRegion.clearReads();
-        originalAssemblyRegion.addAll(readsToKeep);*/
+        originalAssemblyRegion.addAll(possibleVariantReads);
 
         final AssemblyRegion assemblyActiveRegion = AssemblyBasedCallerUtils.assemblyRegionWithWellMappedReads(originalAssemblyRegion, READ_QUALITY_FILTER_THRESHOLD, header);
-        final AssemblyResultSet untrimmedAssemblyResult = AssemblyBasedCallerUtils.assembleReads(assemblyActiveRegion, Collections.emptyList(), MTAC, header, samplesList, logger, referenceReader, assemblyEngine, aligner, false);
+        final AssemblyResultSet untrimmedAssemblyResult = AssemblyBasedCallerUtils.assembleReads(assemblyActiveRegion, Collections.emptyList(), MTAC, header, samplesList, logger, referenceReader, assemblyEngine, aligner);
         final SortedSet<VariantContext> allVariationEvents = untrimmedAssemblyResult.getVariationEvents();
+
+        // put ref reads back in
+        originalAssemblyRegion.addAll(perfectRefMatchReads);
         final AssemblyRegionTrimmer.Result trimmingResult = trimmer.trim(originalAssemblyRegion,allVariationEvents);
         if (!trimmingResult.isVariationPresent()) {
             return NO_CALLS;
@@ -248,22 +250,13 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
 
         final AssemblyRegion regionForGenotyping = assemblyResult.getRegionForGenotyping();
 
-        /*final List<GATKRead> possibleVariantReads = regionForGenotyping.getReads().stream()
-                .filter(r -> r.getAttributeAsInteger(SAMTag.NM.name()) != 0).collect(Collectors.toList());
-        final List<GATKRead> perfectRefMatchReads = regionForGenotyping.getReads().stream()
-                .filter(r -> r.getAttributeAsInteger(SAMTag.NM.name()) == 0).collect(Collectors.toList()); */
-
-        final List<GATKRead> possibleVariantReads = regionForGenotyping.getReads();
-        final List<GATKRead> perfectRefMatchReads = new ArrayList<>();
-
-
         // do expensive PairHMM computation for possible variant reads
-        final ReadLikelihoods<Haplotype> readLikelihoods = likelihoodCalculationEngine.computeReadLikelihoods(assemblyResult,samplesList,splitReadsBySample(possibleVariantReads));
+        final ReadLikelihoods<Haplotype> readLikelihoods = likelihoodCalculationEngine.computeReadLikelihoods(assemblyResult,samplesList,splitReadsBySample(regionForGenotyping.getReads()));
         final Map<GATKRead,GATKRead> readRealignments = AssemblyBasedCallerUtils.realignReadsToTheirBestHaplotype(readLikelihoods, assemblyResult.getReferenceHaplotype(), assemblyResult.getPaddedReferenceLoc(), aligner);
         readLikelihoods.changeReads(readRealignments);
 
         // put in ref match read likelihoods manually with ref likelihood of 0, alt likelihood of -infinity
-        readLikelihoods.addReads(splitReadsBySample(perfectRefMatchReads), 0.0, -5.0);
+        // readLikelihoods.addReads(splitReadsBySample(perfectRefMatchReads), 0.0, -5.0);
 
         final HaplotypeCallerGenotypingEngine.CalledHaplotypes calledHaplotypes = genotypingEngine.callMutations(
                 readLikelihoods,
@@ -370,14 +363,10 @@ public final class Mutect2Engine implements AssemblyRegionEvaluator {
         int badReadsCount = 0;
         double qualSum = 0;
 
-
-
         for (final PileupElement pe : pileup) {
             if (pe.getRead().getAttributeAsInteger(DistinctMismatchTagTransformer.SAM_TAG) > MTAC.maxDistinctMismatchesInRead) {
                 badReadsCount++;
-                if (badReadsCount > 5) { //MTAC.maxBadReadsInPileup) {
-                    //TODO: remove after debug
-                    blar++;
+                if (badReadsCount > MTAC.maxBadReadsInPileup) {
                     return new Pair<>(0, 0.0);
                 }
                 //continue; disable this line -- we keep the read
