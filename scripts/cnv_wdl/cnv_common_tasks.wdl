@@ -80,7 +80,7 @@ task CollectCounts {
     File intervals
     File bam
     File bam_idx
-    String? output_format
+    String? format
     File? gatk4_jar_override
 
     # Runtime parameters
@@ -100,7 +100,7 @@ task CollectCounts {
         java -Xmx${default="8" mem}g -jar $GATK_JAR CollectFragmentCounts \
             --input ${bam} \
             -L ${intervals} \
-            --outputFormat ${default="HDF5" output_format} \
+            --format ${default="HDF5" format} \
             --interval_merging_rule OVERLAPPING_ONLY \
             --output ${counts_filename}
     >>>
@@ -151,7 +151,7 @@ task CollectAllelicCounts {
             -L ${common_sites} \
             --input ${bam} \
             --reference ${ref_fasta} \
-            --minimumBaseQuality ${default="20" minimum_base_quality} \
+            --minimum-base-quality ${default="20" minimum_base_quality} \
             --output ${allelic_counts_filename}
     >>>
 
