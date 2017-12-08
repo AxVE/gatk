@@ -31,8 +31,8 @@ RUN cp -r install_R_packages.R /gatk
 # Start GATK Python environment
 
 ENV DOWNLOAD_DIR /downloads
-ENV CONDA_URL https://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh
-ENV CONDA_MD5 = "bd1655b4b313f7b2a1f2e15b7b925d03"
+ENV CONDA_URL https://repo.continuum.io/miniconda/Miniconda3-4.3.30-Linux-x86_64.sh
+ENV CONDA_MD5 = "0b80a152332a4ce5250f3c09589c7a81"
 ENV CONDA_PATH /opt/miniconda
 RUN mkdir $DOWNLOAD_DIR && \
     wget -nv -O $DOWNLOAD_DIR/miniconda.sh $CONDA_URL && \
